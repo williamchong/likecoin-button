@@ -79,7 +79,12 @@
 </template>
 
 <script>
-import { checkIsMobileClient, isAndroid, isFacebookBrowser } from '~/util/client';
+import {
+  checkIsMobileClient,
+  checkHasStorageAPIAccess,
+  isAndroid,
+  isFacebookBrowser,
+} from '~/util/client';
 
 import CloseButtonIcon from '~/assets/like-button/close-btn.svg';
 
@@ -203,10 +208,22 @@ export default {
       }
       this.doLogin();
     },
-    doLogin() {
+    async doLogin() {
       if (!this.hasCookieSupport || (isAndroid() && isFacebookBrowser())) {
         // User has not log in and 3rd party cookie is blocked
         // or: android fb iab stuck when sign in new window, use like popup
+        if (!(await checkHasStorageAPIAccess())) {
+          try {
+            await document.requestStorageAccess();
+            await this.updateUserSignInStatus();
+            if (this.isLoggedIn) {
+              this.doLike();
+              return;
+            }
+          } catch (err) {
+            console.error(err);
+          }
+        }
         this.popupLike();
         logTrackerEvent(this, 'LikeButtonFlow', 'popupLike', 'popupLike(embed)', 1);
       } else {
@@ -215,18 +232,21 @@ export default {
         logTrackerEvent(this, 'LikeButtonFlow', 'popupSignUp', 'popupSignUp(embed)', 1);
       }
     },
+    doLike() {
+      if (!this.isMaxLike) {
+        this.like();
+        logTrackerEvent(this, 'LikeButtonFlow', 'clickLike', 'clickLike(embed)', 1);
+      }
+
+      if (this.isMaxLike) {
+        this.shouldShowBackside = true;
+      }
+    },
     onClickLike() {
       logTrackerEvent(this, 'LikeButtonFlow', 'clickLikeButton', 'clickLikeButton(embed)', 1);
       if (this.isLoggedIn) {
         // Case 3: User has logged in
-        if (!this.isMaxLike) {
-          this.like();
-          logTrackerEvent(this, 'LikeButtonFlow', 'clickLike', 'clickLike(embed)', 1);
-        }
-
-        if (this.isMaxLike) {
-          this.shouldShowBackside = true;
-        }
+        this.doLike();
       } else {
         this.doLogin();
       }
