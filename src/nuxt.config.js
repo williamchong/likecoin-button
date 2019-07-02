@@ -136,6 +136,7 @@ const nuxtConfig = {
     }],
     '@nuxtjs/sentry',
     'nuxt-svg-loader',
+    ['@nuxtjs/pwa', { icon: false }],
     // '@likecoin/nuxt-google-optimize',
   ],
   sentry: {
