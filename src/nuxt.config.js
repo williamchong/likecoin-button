@@ -145,6 +145,11 @@ const nuxtConfig = {
       ReportingObserver: false, // reporting is very noisy on CSP violation.
     },
   },
+  workbox: {
+    importScripts: [
+      'custom-sw.js',
+    ],
+  },
   // googleOptimize: {
   //   cookieName: '__session',
   //   useFetch: true,
