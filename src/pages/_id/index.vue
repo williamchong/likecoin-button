@@ -4,6 +4,8 @@
 <script>
 import { EXTERNAL_HOSTNAME, LIKECOIN_OEMBED_API_BASE } from '@/constant';
 
+import { checkIsValidISCNId, checkIsValidNFTClassId } from '~/util/nft';
+
 export default {
   head() {
     return {
@@ -51,9 +53,17 @@ export default {
   },
   fetch({
     params,
+    query,
     redirect,
   }) {
-    redirect({ name: 'in-like-id', params });
+    const { id } = params;
+    if (checkIsValidISCNId(id)) {
+      redirect({ name: 'in-like-id', params: { id: 'iscn' }, query: { iscn_id: id } });
+    } else if (checkIsValidNFTClassId(id)) {
+      redirect({ name: 'in-nft-id', params: { id }, query });
+    } else {
+      redirect({ name: 'in-like-id', params, query });
+    }
   },
 };
 </script>
