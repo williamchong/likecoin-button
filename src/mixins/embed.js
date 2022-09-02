@@ -31,6 +31,7 @@ import {
 } from '~/util/api/api';
 
 import { checkHasStorageAPIAccess, checkIsFirefoxStrictMode } from '~/util/client';
+import { checkIsValidISCNId, checkIsValidNFTClassId } from '~/util/nft';
 import { handleQueryStringInUrl } from '~/util/url';
 import { isValidAddress, changeAddressPrefix, maskedWallet } from '~/util/cosmos';
 
@@ -111,13 +112,28 @@ export default {
     }
 
     const { id } = params;
-    let { type = '', iscn_id: iscnId } = query;
+    const {
+      type: qsType = '',
+      iscn_id: qsIscnId,
+      class_id: qsClassId,
+      ...restQuery
+    } = query;
     const { referrer = '' } = query;
+    let [type, iscnId, classId] = [qsType, qsIscnId, qsClassId];
     if (!type && referrer.match(MEDIUM_MEDIA_REGEX)) {
       type = 'medium';
     }
 
-    if (id !== 'iscn') {
+    if (!classId && checkIsValidNFTClassId(id)) {
+      classId = id;
+    }
+    if (classId) {
+      redirect({ name: 'in-embed-nft', query: { ...restQuery, class_id: classId } });
+      return undefined;
+    }
+    if (checkIsValidISCNId(id)) {
+      iscnId = id;
+    } else if (id !== 'iscn') {
       const mappingDataRes = await apiGetURLToISCNMapping(id, referrer).catch((err) => {
         if (!(err.response && err.response.status === 404)) {
           console.error(JSON.stringify({ // eslint-disable-line no-console
@@ -176,7 +192,7 @@ export default {
         .then((res) => {
           if (res.data) {
             // Redirect to NFT Widget if the ISCN has been minted to an NFT
-            redirect({ name: 'in-embed-nft', query: { ...query, iscn_id: iscnId } });
+            redirect({ name: 'in-embed-nft', query: { ...restQuery, iscn_id: iscnId } });
             return true;
           }
           return false;
