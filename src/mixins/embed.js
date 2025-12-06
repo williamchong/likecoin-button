@@ -27,6 +27,7 @@ import { checkHasStorageAPIAccess, checkIsFirefoxStrictMode } from '~/util/clien
 import { checkIsValidISCNId, checkIsValidNFTClassId } from '~/util/nft';
 import { handleQueryStringInUrl } from '~/util/url';
 import { maskedWallet } from '~/util/cosmos';
+import { BOOK_URL_BASE } from '../constant';
 
 const MAX_LIKE = 5;
 const LIKE_STATS_WINDOW_NAME = 'LIKER_LIST_STATS_WINDOW';
@@ -142,6 +143,7 @@ export default {
           isCivicLikerTrial,
           isSubscribedCivicLiker,
           civicLikerSince,
+          evmWallet,
         } = data;
         return {
           id,
@@ -152,6 +154,7 @@ export default {
           isSubscribedCivicLiker,
           civicLikerSince,
           amount,
+          evmWallet,
         };
       }
     }
@@ -320,6 +323,9 @@ export default {
 
     creatorPortfolioURL() {
       const targetId = this.iscnOwner || this.id
+      if (this.evmWallet) {
+        return `${BOOK_URL_BASE}/store?owner_wallet=${this.evmWallet}&utm_source=button&from=@${encodeURIComponent(targetId)}`;
+      }
       let url = `${LIKER_LAND_URL_BASE}/${targetId}?utm_source=button&from=${encodeURIComponent(targetId)}`;
       if (this.referrer) {
         url = `${url}&referrer=${encodeURIComponent(this.referrer)}`;
